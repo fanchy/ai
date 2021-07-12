@@ -76,9 +76,13 @@ morekeywords={*,...}               % if you want to add more keywords to the set
 \newpage
 \section{数学推导与python实现}
 
-\subsection{线性可分}
+\subsection{分类超平面}
 简单说明如下：
-
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=14cm]{svm1.jpg}
+    \caption{SVM线性可分}\label{fig1}
+\end{figure}
 
 
 
@@ -141,6 +145,11 @@ morekeywords={*,...}               % if you want to add more keywords to the set
         \mathrm{ s.t. }\ \   \alpha \odot y &= \boldsymbol{0} \nonumber 
 \end{align}
 加入软间隔参数,每个向量点距离分类超平面距离增加$\xi_i$，同时增加一个惩罚系数C,代入\eqref{eq4_1}新形式如下：
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=14cm]{svm_soft.jpg}
+    \caption{SVM软间隔}\label{fig2}
+\end{figure}
 \begin{align}
     L(w, b, \xi, {\alpha}, u) &= \frac{1}{2}w^T \cdot w + C \cdot \xi^T \cdot\boldsymbol{1}^m   - {\alpha} ^T \cdot  (y \odot (X \cdot w + b) - 1) - u^T \cdot \xi  \label{eq10} 
 \end{align}
