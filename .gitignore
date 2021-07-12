@@ -1,7 +1,5 @@
-_site
-.sass-cache
-.bundle
-Gemfile.lock
-*.gem
-vendor/*
-.jekyll-metadata
+*.aux 
+*.log 
+*.gz 
+*.toc 
+*.zip
