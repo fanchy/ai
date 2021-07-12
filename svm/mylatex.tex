@@ -77,70 +77,86 @@ morekeywords={*,...}               % if you want to add more keywords to the set
 \section{数学推导与python实现}
 
 \subsection{线性可分}
-三层网络简单说明如下：
-\begin{itemize}
-    \item 输入层，不做处理，只是输入数据
-    \item 隐藏层，单元数为 $ n_h $ 我们就以RELU为激活函数，另外一个常用的是sigmoid，我们把激活函数封装成一个类，可以随时替换 
-    \item 输出层为一个单元，由于是二分类，我们就用sigmoid拟合对应类1的概率
-\end{itemize}
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=14cm]{bpnn.png}
-    \caption{神经网络示意图}\label{fig1}
-\end{figure}
+简单说明如下：
 
 
-\begin{itemize}
-\item $X$ 表示输入样本向量矩阵，$Y$表示样本集的期望输出标记（有可能是0/1标记的向量，有可能是onehot的矩阵），本文示例由于是二分类，那么Y的每个元素要么是0要么是1，$Y$是m个元素的向量,但是在运算中为了通用将其转换为$m\times 1$的矩阵。
-\item $m$为样本数量,$n$为样本向量的维度。
-\item 激活函数用$f$表示，隐藏层激活函数$f_h$使用RELU函数:$f_h(x) = max(0, x)$，输出层$f_o$为sigmoid函数，输出为1类的概率$f_o(x) = \frac{1}{1+exp(-x)}$
-\item 隐藏层输出为$Y_h$,输出层的输出为$Y_o$
-\item 隐藏层单元的参数为$w_h$, $N_h$个隐藏层单元的参数矩阵为$W_h$,输出层单元的参数为$w_o$，$N_o$个输出层单元的参数矩阵为$W_o$。
-\item 虽然本文使用二分类即输出单元为1个，但是仍然使用矩阵$Yo $ 和 $ W_o$表示，从而使得算法是通用的，改成onehot+softmax方式的多分类，也是适用的。
-\item 从输入到输出的公式：$Y_o = f_o(f_h(X \cdot W_h) \cdot Wo)$
-\item 注：这里的线性变换$X \cdot W_h$并没有使用偏置，通过在$X$增加一个全1的列，达到同样的效果。
-\end{itemize}
 
 
 \subsection{公式推导}
-单个样本的运算过程表示如下：    
+过程表示如下：    
 \begin{align}
-    \mathop{\arg\max}_{w_0} \ d &= \frac{y_0 \cdot (x_0^T \cdot w_0 + b_0)}{ \left\|w_0\right\|} 			\nonumber\\
-	\mathrm{ s.t. }\ \   &\frac{y_i \cdot (x_i^T \cdot w_0 + b_0)}{ \left\|w_0\right\|} \geq d				\nonumber\\
+    \mathop{\arg\max}_{w_0} \ d &= \frac{y_0 \cdot (x_0^T \cdot w_0 + b_0)}{ \left\|w_0\right\|} 			\label{eq1}\\
+	\mathrm{ s.t. }\ \   &\frac{y_i \cdot (x_i^T \cdot w_0 + b_0)}{ \left\|w_0\right\|} \geq d				\nonumber
+\end{align}
+将 $w_0$ 和 $b_0$ 进行一定比例的缩放
+\begin{align}
 	w &= \frac{w_0 }{ y_0 \cdot (x_0^T \cdot w_0 + b_0)} 			\nonumber\\
-    b &= \frac{b_0 }{ y_0 \cdot (x_0^T \cdot w_0 + b_0)} 			\nonumber\\
-	\mathop{\arg\max}_{w} \ d &= \frac{1}{ \left\|w\right\|} 	\iff \mathop{\arg\min}_{w} \ \left\|w\right\|		\nonumber\\
-    \mathrm{ s.t. }\ \   & y_i \cdot (x_i^T \cdot w + b) \geq 1				\nonumber\\
-    \mathop{\arg\min}_{w,b} \ 	L(w, b, {\alpha}) &= \frac{1}{2}	w^T \cdot w  - {\alpha} ^T \cdot  (y \odot (X \cdot w + b) - 1) \nonumber\\
+    b &= \frac{b_0 }{ y_0 \cdot (x_0^T \cdot w_0 + b_0)} 			\nonumber
+\end{align}
+可以将 \eqref{eq1} 式化简为：
+\begin{align}
+	\mathop{\arg\max}_{w} \ d &= \frac{1}{ \left\|w\right\|} 			\nonumber\\
+    \iff \mathop{\arg\min}_{w}  \ d &=  \left\|w\right\| \nonumber\\
+    \iff \mathop{\arg\min}_{w}  \ d &=  \frac{1}{2}w^T \cdot w \label{eq2}\\
+    \mathrm{ s.t. }\ \   & y_i \cdot (x_i^T \cdot w + b) \geq 1				\label{eq3}
+\end{align}
+将\eqref{eq2} 和 \eqref{eq3} 利用拉格朗日乘数法，获得拉格朗日原始问题形式：
+\begin{align}
+    \mathop{\arg\min_{w,b}\max_{\alpha}} \ 	L(w, b, {\alpha}) &= \frac{1}{2}	w^T \cdot w  - {\alpha} ^T \cdot  (y \odot (X \cdot w + b) - 1) \nonumber\\
         &= \frac{1}{2}	w^T \cdot w  - (\alpha \odot y) ^T \cdot  (X \cdot w + b) - \alpha^T \cdot \boldsymbol{1}^m \nonumber\\
-        &= \frac{1}{2}	w^T \cdot w  - (\alpha \odot y) ^T \cdot  (X \cdot w + b) - \boldsymbol{1}^T\cdot\alpha \nonumber\\
-    \mathrm{d}L &= \frac{1}{2}((\mathrm{d}w)^T \cdot w + w^T \cdot \mathrm{d}w) - (\alpha \odot y) ^T \cdot(X\mathrm{d}w) \nonumber \\
+        &= \frac{1}{2}	w^T \cdot w  - (\alpha \odot y) ^T \cdot  (X \cdot w + b) - \boldsymbol{1}^T\cdot\alpha \label{eq4}
+\end{align}
+当满足KTT条件时， \eqref{eq4} 等价于拉格朗日对偶问题:
+\begin{align}
+    \mathop{\arg\max_{\alpha}\min_{w,b}} \ 	L(w, b, {\alpha}) &= \frac{1}{2}	w^T \cdot w  - (\alpha \odot y) ^T \cdot  (X \cdot w + b) - \boldsymbol{1}^T\cdot\alpha \label{eq4_1}
+\end{align}
+首先求L以 w、b为参数的极小值，通过求微分得到偏导数形式。
+\begin{align}
+    \mathrm{d}L &= \frac{1}{2}tr[(\mathrm{d}w)^T \cdot w + w^T \cdot \mathrm{d}w) - (\alpha \odot y) ^T \cdot(X\mathrm{d}w) \nonumber \\
                 & \ \ \  - (\alpha \odot y) ^T \cdot \mathrm{d}b \nonumber\\
-                & \ \ \  - (\mathrm{d}\alpha)^T \cdot (y \odot (X \cdot w + b) - 1) \nonumber \\
-                &= w^T\mathrm{d}w - (X^T\cdot(\alpha \odot y))^T\mathrm{d}w - (\alpha \odot y) ^T \cdot \mathrm{d}b - (y \odot (X \cdot w + b) - 1)^T\mathrm{d}\alpha \nonumber \\
-    \frac{\partial L}{\partial w} &= w - X^T\cdot(\alpha \odot y) \nonumber \\
-    \frac{\partial L}{\partial b} &= - \alpha \odot y \nonumber \\
-    \iff \nonumber \\
-    w &= X^T\cdot(\alpha \odot y) \nonumber \\
-    \alpha \odot y &= \boldsymbol{0} \nonumber \\
+                & \ \ \  - (\mathrm{d}\alpha)^T \cdot (y \odot (X \cdot w + b) - 1)] \nonumber \\
+                &= tr[w^T\mathrm{d}w - (X^T\cdot(\alpha \odot y))^T\mathrm{d}w - (\alpha \odot y) ^T \cdot \mathrm{d}b - (y \odot (X \cdot w + b) - 1)^T\mathrm{d}\alpha] \nonumber
+\end{align}
+从而得到w、b 偏导数，并令偏导数为0。
+\begin{align}
+    \frac{\partial L}{\partial w} &= w - X^T\cdot(\alpha \odot y) = \boldsymbol{0}\nonumber \\
+    \frac{\partial L}{\partial b} &= - \alpha \odot y \nonumber = \boldsymbol{0}\\
+\end{align}
+推导出如下等式和约束：
+\begin{align}
+    w &= X^T\cdot(\alpha \odot y) \label{eq6} \\
+    \alpha \odot y &= \boldsymbol{0} \label{eq7}
+\end{align}
+将\eqref{eq6}式 和 \eqref{eq7}式 代入\eqref{eq4_1}式中，
+\begin{align}
     \mathop{\arg\max}_{\alpha} L(w, b, {\alpha}) &= \frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) \nonumber \\
                       & \ \ \  - (\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) \nonumber \\
                       & \ \ \  - (\alpha \odot y)^T \cdot b^m  \nonumber \\
                       &= -\frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) + (\alpha \odot y^T) \cdot b \nonumber \\
-                      &= -\frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) \nonumber \\
-    \iff \mathop{\arg\min}_{\alpha} L(w, b, {\alpha}) &= \frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) \nonumber \\
-        \mathrm{ s.t. }\ \   \alpha \odot y &= \boldsymbol{0} \nonumber \\
+                      &= -\frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) \nonumber 
 \end{align}
+去除符号，将极大转换成极小形式：
 \begin{align}
-    L(w, b, {\alpha}, u) &= \frac{1}{2}w^T \cdot w + C \cdot \xi^T \cdot\boldsymbol{1}^m   - {\alpha} ^T \cdot  (y \odot (X \cdot w + b) - 1) - u^T \cdot \xi \nonumber \\
-    \frac{\partial L}{\partial w} &= w - X^T\cdot(\alpha \odot y) \nonumber \\
-    \frac{\partial L}{\partial b} &= - \alpha \odot y \nonumber  \\
-    \frac{\partial L}{\partial \xi} &= C - \alpha - u \nonumber \\
-    \iff  L(w, b, \xi, {\alpha}, u) &= -\frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) + \boldsymbol{1}^m \cdot \alpha \nonumber \\
-    \mathrm{ s.t. }\ \   \alpha \odot y &= \boldsymbol{0} \nonumber \\
-    C - \alpha - u \nonumber  = \boldsymbol{0} \nonumber \\
-    \alpha_i \geq 0 \nonumber \\
-    u_i \geq 0 \nonumber 
+    \mathop{\arg\min}_{\alpha} L(w, b, {\alpha}) &= \frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) \label{eq9} \\
+        \mathrm{ s.t. }\ \   \alpha \odot y &= \boldsymbol{0} \nonumber 
+\end{align}
+加入软间隔参数,每个向量点距离分类超平面距离增加$\xi_i$，同时增加一个惩罚系数C,代入\eqref{eq4_1}新形式如下：
+\begin{align}
+    L(w, b, \xi, {\alpha}, u) &= \frac{1}{2}w^T \cdot w + C \cdot \xi^T \cdot\boldsymbol{1}^m   - {\alpha} ^T \cdot  (y \odot (X \cdot w + b) - 1) - u^T \cdot \xi  \label{eq10} 
+\end{align}
+求得对于w、b、$\xi$ 的偏导并令其为0：
+\begin{align}
+    \frac{\partial L}{\partial w} &= w - X^T\cdot(\alpha \odot y) = \boldsymbol{0} \nonumber \\
+    \frac{\partial L}{\partial b} &= - \alpha \odot y  = \boldsymbol{0} \nonumber  \\
+    \frac{\partial L}{\partial \xi} &= C - \alpha - u  = \boldsymbol{0} \nonumber 
+\end{align}
+代入 \eqref{eq10} 式中： 
+\begin{align}
+    \mathop{\arg\max_{\alpha}}  L(w, b, \xi, {\alpha}, u) &= -\frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) + \boldsymbol{1}^m \cdot \alpha \label{eq11} \\
+    \mathrm{ s.t. }\ \   &\alpha \odot y = \boldsymbol{0} \nonumber \\
+    &C - \alpha - u \nonumber  = \boldsymbol{0} \nonumber \\
+    &\alpha_i \geq 0 \nonumber \\
+    &u_i \geq 0 \nonumber 
 \end{align}
 
 End!!
