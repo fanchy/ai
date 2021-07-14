@@ -143,16 +143,16 @@ $\frac{y_i \cdot (x_i^T \cdot w_0 + b_0)}{ \left\|w_0\right\|}$为几何间隔�
 \end{align}
 将\eqref{eq6}式 和 \eqref{eq7}式 代入\eqref{eq5}式中，
 \begin{align}
-    \mathop{\arg\max_{\alpha}} L(w, b, {\alpha}) &= \frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) \nonumber \\
-                      & \ \ \  - (\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) \nonumber \\
+    \mathop{\arg\max_{\alpha}} L(w, b, {\alpha}) &= \frac{1}{2}(\alpha \odot y)^T \cdot X \cdot X^T \cdot (\alpha \odot y) \nonumber \\
+                      & \ \ \  - (\alpha \odot y)^T \cdot X \cdot X^T \cdot (\alpha \odot y) \nonumber \\
                       & \ \ \  - (\alpha \odot y)^T \cdot b^m  \nonumber \\
                       & \ \ \  + \boldsymbol{1}^T\cdot\alpha  \nonumber \\
-                      &= -\frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) + (\alpha \odot y)^T \cdot b + \boldsymbol{1}^T\cdot\alpha \nonumber \\
-                      &= -\frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) + \boldsymbol{1}^T\cdot\alpha \nonumber 
+                      &= -\frac{1}{2}(\alpha \odot y)^T \cdot X \cdot X^T \cdot (\alpha \odot y) + (\alpha \odot y)^T \cdot b + \boldsymbol{1}^T\cdot\alpha \nonumber \\
+                      &= -\frac{1}{2}(\alpha \odot y)^T \cdot X \cdot X^T \cdot (\alpha \odot y) + \boldsymbol{1}^T\cdot\alpha \nonumber 
 \end{align}
 去除负号，将极大转换成极小形式：
 \begin{align}
-    \mathop{\arg\min}_{\alpha} L(w, b, {\alpha}) &= \frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) - \boldsymbol{1}^T\cdot\alpha \label{eq8} \\
+    \mathop{\arg\min}_{\alpha} L(w, b, {\alpha}) &= \frac{1}{2}(\alpha \odot y)^T \cdot X \cdot X^T \cdot (\alpha \odot y) - \boldsymbol{1}^T\cdot\alpha \label{eq8} \\
         \mathrm{ s.t. }\ \   y^T \cdot \alpha &= 0 \nonumber 
 \end{align}
 为了使拉格朗日对偶问题的解与原始问题解相同，需要同时满足KTT条件：
@@ -182,7 +182,7 @@ $\frac{y_i \cdot (x_i^T \cdot w_0 + b_0)}{ \left\|w_0\right\|}$为几何间隔�
 \end{align}
 代入 \eqref{eq9} 式中： 
 \begin{align}
-    \mathop{\arg\max_{\alpha}}  L(w, b, \xi, {\alpha}, \mu) &= -\frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) + \boldsymbol{1}^m \cdot \alpha \nonumber \\
+    \mathop{\arg\max_{\alpha}}  L(w, b, \xi, {\alpha}, \mu) &= -\frac{1}{2}(\alpha \odot y)^T \cdot X \cdot X^T \cdot (\alpha \odot y) + \boldsymbol{1}^m \cdot \alpha \nonumber \\
     \mathrm{ s.t. }\ \   &y^T \cdot \alpha = 0 \nonumber \\
     &C - \alpha - \mu \nonumber  = \boldsymbol{0} \nonumber \\
     &\alpha_i \geq 0 \nonumber \\
@@ -190,7 +190,7 @@ $\frac{y_i \cdot (x_i^T \cdot w_0 + b_0)}{ \left\|w_0\right\|}$为几何间隔�
 \end{align}
 $C - \alpha - u   = \boldsymbol{0} $、$ \alpha_i \geq 0 $ 、$u_i \geq 0 $约束可以化简为：
 \begin{align}
-    \mathop{\arg\max_{\alpha}}  L(w, b, \xi, {\alpha}, \mu) &= -\frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) + \boldsymbol{1}^m \cdot \alpha \label{eq10}\\
+    \mathop{\arg\max_{\alpha}}  L(w, b, \xi, {\alpha}, \mu) &= -\frac{1}{2}(\alpha \odot y)^T \cdot X \cdot X^T \cdot (\alpha \odot y) + \boldsymbol{1}^m \cdot \alpha \label{eq10}\\
     \mathrm{ s.t. }\ \   &y^T \cdot \alpha = 0 \nonumber \\
     & 0 \leq \alpha_i  \leq C \nonumber 
 \end{align}
