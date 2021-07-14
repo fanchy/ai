@@ -60,7 +60,9 @@ morekeywords={*,...}               % if you want to add more keywords to the set
 \thispagestyle{empty}
 
 \begin{abstract}
-支持向量机（support vector machines, SVM）是一种分类模型，该模型在特征空间中求解间隔最大的分类超平面。
+支持向量机（support vector machines, SVM）是一种分类模型，该模型在特征空间中求解间隔最大的分类超平面。当训练数据近似线性
+可分时，可以通过增加软间隔学习一个线性分类器。当线性不可分时，利用核技巧，隐式的将特征空间映射到高维特征空间，从而达到线性
+可分。使用序列最小最优化算法（SMO），可以快速求解模型的参数。
 \par\textbf{关键词：}支持向量机; SVM; SMO; 矩阵运算; 矩阵求导;numpy;sklearn. 
 \end{abstract}
 
@@ -77,7 +79,12 @@ morekeywords={*,...}               % if you want to add more keywords to the set
 \section{数学推导与python实现}
 
 \subsection{分类超平面}
-简单说明如下：
+当训练数据线性可分，可以得到一个线性超平面 $ x \cdot w + b = 0 $,将在超平面上方的归为正类，将在超平面下方的归为负类。当数据点
+与超平面距离越远时，表示分类的确定性越高，这样虽然线性分类的超平面可能有无数多个，但是我们可以找到一个所有点距离超平面最大的一个
+超平面。相应的决策函数为:
+\begin{align*}
+    f(x) = sign(x \cdot w^* + b^*)
+\end{align*}
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=14cm]{svm1.jpg}
@@ -87,9 +94,12 @@ morekeywords={*,...}               % if you want to add more keywords to the set
 
 
 \subsection{公式推导}
-过程表示如下：    
+$x_i^T \cdot w_0 + b_0$ 为正时，$y_i$为正，当$x_i^T \cdot w_0 + b_0$ 为负时，$y_i$为负，则可以定义
+$\frac{y_i \cdot (x_i^T \cdot w_0 + b_0)}{ \left\|w_0\right\|}$为几何间隔，表示数据点距离超平面的距离。
+模型最终会找到一个参数为$w_0$和$b_0$的分离超平面，所有点距离超平面的距离都大于等于d，将距离正好等于d的数据
+点称之为支持向量。
 \begin{align}
-    \mathop{\arg\max}_{w_0} \ d &= \frac{y_0 \cdot (x_0^T \cdot w_0 + b_0)}{ \left\|w_0\right\|} 			\label{eq1}\\
+    \mathop{\arg\max_{w_0, b_0}} \ d &= \frac{y_0 \cdot (x_0^T \cdot w_0 + b_0)}{ \left\|w_0\right\|} 			\label{eq1}\\
 	\mathrm{ s.t. }\ \   &\frac{y_i \cdot (x_i^T \cdot w_0 + b_0)}{ \left\|w_0\right\|} \geq d				\nonumber
 \end{align}
 将 $w_0$ 和 $b_0$ 进行一定比例的缩放
@@ -99,73 +109,103 @@ morekeywords={*,...}               % if you want to add more keywords to the set
 \end{align}
 可以将 \eqref{eq1} 式化简为：
 \begin{align}
-	\mathop{\arg\max}_{w} \ d &= \frac{1}{ \left\|w\right\|} 			\nonumber\\
-    \iff \mathop{\arg\min}_{w}  \ d &=  \left\|w\right\| \nonumber\\
-    \iff \mathop{\arg\min}_{w}  \ d &=  \frac{1}{2}w^T \cdot w \label{eq2}\\
+	\mathop{\arg\max_{w}} \ d &= \frac{1}{ \left\|w\right\|} 			\nonumber\\
+    \iff \mathop{\arg\min_{w}}  \ d &=  \left\|w\right\| \nonumber\\
+    \iff \mathop{\arg\min_{w}}  \ d &=  \frac{1}{2}w^T \cdot w \label{eq2}\\
     \mathrm{ s.t. }\ \   & y_i \cdot (x_i^T \cdot w + b) \geq 1				\label{eq3}
 \end{align}
 将\eqref{eq2} 和 \eqref{eq3} 利用拉格朗日乘数法，获得拉格朗日原始问题形式：
 \begin{align}
     \mathop{\arg\min_{w,b}\max_{\alpha}} \ 	L(w, b, {\alpha}) &= \frac{1}{2}	w^T \cdot w  - {\alpha} ^T \cdot  (y \odot (X \cdot w + b) - 1) \nonumber\\
-        &= \frac{1}{2}	w^T \cdot w  - (\alpha \odot y) ^T \cdot  (X \cdot w + b) - \alpha^T \cdot \boldsymbol{1}^m \nonumber\\
-        &= \frac{1}{2}	w^T \cdot w  - (\alpha \odot y) ^T \cdot  (X \cdot w + b) - \boldsymbol{1}^T\cdot\alpha \label{eq4}
+        &= \frac{1}{2}	w^T \cdot w  - (\alpha \odot y) ^T \cdot  (X \cdot w + b) + \alpha^T \cdot \boldsymbol{1}^m \nonumber\\
+        &= \frac{1}{2}	w^T \cdot w  - (\alpha \odot y) ^T \cdot  (X \cdot w + b) + \boldsymbol{1}^T\cdot\alpha \label{eq4}
 \end{align}
-当满足KTT条件时， \eqref{eq4} 等价于拉格朗日对偶问题:
+当满足KTT条件时， 拉格朗日对偶问题的解等价于\eqref{eq4} 的解:
 \begin{align}
-    \mathop{\arg\max_{\alpha}\min_{w,b}} \ 	L(w, b, {\alpha}) &= \frac{1}{2}	w^T \cdot w  - (\alpha \odot y) ^T \cdot  (X \cdot w + b) - \boldsymbol{1}^T\cdot\alpha \label{eq4_1}
+    \mathop{\arg\max_{\alpha}\min_{w,b}} \ 	L(w, b, {\alpha}) &= \frac{1}{2}	w^T \cdot w  - (\alpha \odot y) ^T \cdot  (X \cdot w + b) + \boldsymbol{1}^T\cdot\alpha \label{eq5}
 \end{align}
 首先求L以 w、b为参数的极小值，通过求微分得到偏导数形式。
 \begin{align}
     \mathrm{d}L &= \frac{1}{2}tr[(\mathrm{d}w)^T \cdot w + w^T \cdot \mathrm{d}w) - (\alpha \odot y) ^T \cdot(X\mathrm{d}w) \nonumber \\
-                & \ \ \  - (\alpha \odot y) ^T \cdot \mathrm{d}b \nonumber\\
+                & \ \ \  - (1^T\cdot(\alpha \odot y)) ^T \cdot \mathrm{d}b \nonumber\\
                 & \ \ \  - (\mathrm{d}\alpha)^T \cdot (y \odot (X \cdot w + b) - 1)] \nonumber \\
                 &= tr[w^T\mathrm{d}w - (X^T\cdot(\alpha \odot y))^T\mathrm{d}w - (\alpha \odot y) ^T \cdot \mathrm{d}b - (y \odot (X \cdot w + b) - 1)^T\mathrm{d}\alpha] \nonumber
 \end{align}
 从而得到w、b 偏导数，并令偏导数为0。
 \begin{align}
-    \frac{\partial L}{\partial w} &= w - X^T\cdot(\alpha \odot y) = \boldsymbol{0}\nonumber \\
-    \frac{\partial L}{\partial b} &= - \alpha \odot y \nonumber = \boldsymbol{0}\\
+    \frac{\partial L}{\partial w} &= w - X^T\cdot(\alpha \odot y) = \boldsymbol{0} \nonumber \\
+    \frac{\partial L}{\partial b} &= - 1^T\cdot(\alpha \odot y) = - y^T \cdot \alpha = 0  \nonumber
 \end{align}
-推导出如下等式和约束：
+推导出如下关系：
 \begin{align}
     w &= X^T\cdot(\alpha \odot y) \label{eq6} \\
-    \alpha \odot y &= \boldsymbol{0} \label{eq7}
+    y^T \cdot \alpha &= 0 \label{eq7}
 \end{align}
-将\eqref{eq6}式 和 \eqref{eq7}式 代入\eqref{eq4_1}式中，
+将\eqref{eq6}式 和 \eqref{eq7}式 代入\eqref{eq5}式中，
 \begin{align}
-    \mathop{\arg\max}_{\alpha} L(w, b, {\alpha}) &= \frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) \nonumber \\
+    \mathop{\arg\max_{\alpha}} L(w, b, {\alpha}) &= \frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) \nonumber \\
                       & \ \ \  - (\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) \nonumber \\
                       & \ \ \  - (\alpha \odot y)^T \cdot b^m  \nonumber \\
-                      &= -\frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) + (\alpha \odot y^T) \cdot b \nonumber \\
-                      &= -\frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) \nonumber 
+                      & \ \ \  + \boldsymbol{1}^T\cdot\alpha  \nonumber \\
+                      &= -\frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) + (\alpha \odot y)^T \cdot b + \boldsymbol{1}^T\cdot\alpha \nonumber \\
+                      &= -\frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) + \boldsymbol{1}^T\cdot\alpha \nonumber 
 \end{align}
-去除符号，将极大转换成极小形式：
+去除负号，将极大转换成极小形式：
 \begin{align}
-    \mathop{\arg\min}_{\alpha} L(w, b, {\alpha}) &= \frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) \label{eq9} \\
-        \mathrm{ s.t. }\ \   \alpha \odot y &= \boldsymbol{0} \nonumber 
+    \mathop{\arg\min}_{\alpha} L(w, b, {\alpha}) &= \frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) - \boldsymbol{1}^T\cdot\alpha \label{eq8} \\
+        \mathrm{ s.t. }\ \   y^T \cdot \alpha &= 0 \nonumber 
 \end{align}
-加入软间隔参数,每个向量点距离分类超平面距离增加$\xi_i$，同时增加一个惩罚系数C,代入\eqref{eq4_1}新形式如下：
+为了使拉格朗日对偶问题的解与原始问题解相同，需要同时满足KTT条件：
+\begin{align}
+    \frac{\partial L}{\partial w} &= 0 \nonumber \\
+    \frac{\partial L}{\partial b} &= 0 \nonumber \\
+    {\alpha} \odot  (y \odot (X \cdot w + b) - 1) &= \boldsymbol{0}^m \nonumber \\
+    y \odot ((X \cdot w + b) - 1) &\geq \boldsymbol{0}^m \nonumber \\
+    {\alpha} &\geq \boldsymbol{0}^m  \nonumber 
+\end{align}
+
+\subsection{软间隔}
+加入软间隔参数,每个向量点距离分类超平面距离增加$\xi_i$，同时增加一个惩罚系数C,代入\eqref{eq5}新形式如下：
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=14cm]{svm_soft.jpg}
     \caption{SVM软间隔}\label{fig2}
 \end{figure}
 \begin{align}
-    L(w, b, \xi, {\alpha}, u) &= \frac{1}{2}w^T \cdot w + C \cdot \xi^T \cdot\boldsymbol{1}^m   - {\alpha} ^T \cdot  (y \odot (X \cdot w + b) - 1) - u^T \cdot \xi  \label{eq10} 
+    L(w, b, \xi, {\alpha}, \mu ) &= \frac{1}{2}w^T \cdot w + C \cdot {\boldsymbol{1}^T} \cdot \xi  - {\alpha} ^T \cdot  (y \odot (X \cdot w + b) - 1) - \mu^T \cdot \xi  \label{eq9} 
 \end{align}
 求得对于w、b、$\xi$ 的偏导并令其为0：
 \begin{align}
     \frac{\partial L}{\partial w} &= w - X^T\cdot(\alpha \odot y) = \boldsymbol{0} \nonumber \\
-    \frac{\partial L}{\partial b} &= - \alpha \odot y  = \boldsymbol{0} \nonumber  \\
+    \frac{\partial L}{\partial b} &= - 1^T\cdot(\alpha \odot y) = - y^T \cdot \alpha = 0  \nonumber \\
     \frac{\partial L}{\partial \xi} &= C - \alpha - u  = \boldsymbol{0} \nonumber 
 \end{align}
-代入 \eqref{eq10} 式中： 
+代入 \eqref{eq9} 式中： 
 \begin{align}
-    \mathop{\arg\max_{\alpha}}  L(w, b, \xi, {\alpha}, u) &= -\frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) + \boldsymbol{1}^m \cdot \alpha \label{eq11} \\
-    \mathrm{ s.t. }\ \   &\alpha \odot y = \boldsymbol{0} \nonumber \\
-    &C - \alpha - u \nonumber  = \boldsymbol{0} \nonumber \\
+    \mathop{\arg\max_{\alpha}}  L(w, b, \xi, {\alpha}, \mu) &= -\frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) + \boldsymbol{1}^m \cdot \alpha \nonumber \\
+    \mathrm{ s.t. }\ \   &y^T \cdot \alpha = 0 \nonumber \\
+    &C - \alpha - \mu \nonumber  = \boldsymbol{0} \nonumber \\
     &\alpha_i \geq 0 \nonumber \\
-    &u_i \geq 0 \nonumber 
+    &\mu_i \geq 0 \nonumber 
+\end{align}
+$C - \alpha - u   = \boldsymbol{0} $、$ \alpha_i \geq 0 $ 、$u_i \geq 0 $约束可以化简为：
+\begin{align}
+    \mathop{\arg\max_{\alpha}}  L(w, b, \xi, {\alpha}, \mu) &= -\frac{1}{2}(\alpha \odot y)^T \cdot X^T \cdot X \cdot (\alpha \odot y) + \boldsymbol{1}^m \cdot \alpha \label{eq10}\\
+    \mathrm{ s.t. }\ \   &y^T \cdot \alpha = 0 \nonumber \\
+    & 0 \leq \alpha_i  \leq C \nonumber 
+\end{align}
+
+为了使拉格朗日对偶问题的解与原始问题解相同，需要同时满足KTT条件：
+\begin{align}
+    \frac{\partial L}{\partial w} &= 0 \nonumber \\
+    \frac{\partial L}{\partial b} &= 0 \nonumber \\
+    \frac{\partial L}{\partial \xi} &= 0 \nonumber \\
+    {\alpha} \odot  (y \odot (X \cdot w + b) - 1 + \xi) &= \boldsymbol{0}^m \nonumber \\
+    y \odot ((X \cdot w + b) - 1  + \xi) &\geq \boldsymbol{0}^m \nonumber \\
+    {\alpha} &\geq \boldsymbol{0}^m  \nonumber \\
+    \mu \odot \xi &=  \boldsymbol{0}^m \nonumber \\
+    \xi &\geq \boldsymbol{0}^m  \nonumber \\
+    \mu &\geq \boldsymbol{0}^m  \nonumber 
 \end{align}
 
 End!!
