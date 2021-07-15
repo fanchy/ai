@@ -152,7 +152,7 @@ $\frac{y_i \cdot (x_i^T \cdot w_0 + b_0)}{ \left\|w_0\right\|}$为几何间隔�
 \end{align}
 去除负号，将极大转换成极小形式：
 \begin{align}
-    \mathop{\arg\min}_{\alpha} L(w, b, {\alpha}) &= \frac{1}{2}(\alpha \odot y)^T \cdot X \cdot X^T \cdot (\alpha \odot y) - \boldsymbol{1}^T\cdot\alpha \label{eq8} \\
+    \mathop{\arg\min_{\alpha}} L(w, b, {\alpha}) &= \frac{1}{2}(\alpha \odot y)^T \cdot X \cdot X^T \cdot (\alpha \odot y) - \boldsymbol{1}^T\cdot\alpha \label{eq8} \\
         \mathrm{ s.t. }\ \   y^T \cdot \alpha &= 0 \nonumber 
 \end{align}
 为了使拉格朗日对偶问题的解与原始问题解相同，需要同时满足KTT条件：
@@ -160,19 +160,30 @@ $\frac{y_i \cdot (x_i^T \cdot w_0 + b_0)}{ \left\|w_0\right\|}$为几何间隔�
     \frac{\partial L}{\partial w} &= 0 \nonumber \\
     \frac{\partial L}{\partial b} &= 0 \nonumber \\
     {\alpha} \odot  (y \odot (X \cdot w + b) - 1) &= \boldsymbol{0}^m \nonumber \\
-    y \odot ((X \cdot w + b) - 1) &\geq \boldsymbol{0}^m \nonumber \\
+    y \odot (X \cdot w + b) - 1 &\geq \boldsymbol{0}^m \nonumber \\
     {\alpha} &\geq \boldsymbol{0}^m  \nonumber 
 \end{align}
 
 \subsection{软间隔}
-加入软间隔参数,每个向量点距离分类超平面距离增加$\xi_i$，同时增加一个惩罚系数C,代入\eqref{eq5}新形式如下：
+当训练数据近似线性可分，有些异常点或噪声点导致无法找到分离超平面，可以对每个数据点加一个松弛变量$\xi_i$，
+从而让所有数据点均满足约束。
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=14cm]{svm_soft.jpg}
     \caption{SVM软间隔}\label{fig2}
 \end{figure}
+
+加入软间隔参数,每个向量点距离分类超平面距离增加$\xi_i$，同时增加一个惩罚系数C,代入\eqref{eq5}新形式如下：
+\begin{align*}
+    \mathop{\arg\min_{w}}  \ d &=  \frac{1}{2}w^T \cdot w + C \cdot \boldsymbol{1}^m \cdot \xi\\
+    \mathrm{ s.t. }\ \   & y_i \cdot (x_i^T \cdot w + b) \geq 1	- \xi_i			\\
+    & \xi_i	\geq 0		\\
+\end{align*}
+
+
+将其转换为拉格朗日对偶形式：
 \begin{align}
-    L(w, b, \xi, {\alpha}, \mu ) &= \frac{1}{2}w^T \cdot w + C \cdot {\boldsymbol{1}^T} \cdot \xi  - {\alpha} ^T \cdot  (y \odot (X \cdot w + b) - 1) - \mu^T \cdot \xi  \label{eq9} 
+    L(w, b, \xi, {\alpha}, \mu ) &= \frac{1}{2}w^T \cdot w + C \cdot {\boldsymbol{1}^T} \cdot \xi  - {\alpha} ^T \cdot  (y \odot (X \cdot w + b) - 1 + \xi) - \mu^T \cdot \xi  \label{eq9} 
 \end{align}
 求得对于w、b、$\xi$ 的偏导并令其为0：
 \begin{align}
@@ -190,9 +201,9 @@ $\frac{y_i \cdot (x_i^T \cdot w_0 + b_0)}{ \left\|w_0\right\|}$为几何间隔�
 \end{align}
 $C - \alpha - u   = \boldsymbol{0} $、$ \alpha_i \geq 0 $ 、$u_i \geq 0 $约束可以化简为：
 \begin{align}
-    \mathop{\arg\max_{\alpha}}  L(w, b, \xi, {\alpha}, \mu) &= -\frac{1}{2}(\alpha \odot y)^T \cdot X \cdot X^T \cdot (\alpha \odot y) + \boldsymbol{1}^m \cdot \alpha \label{eq10}\\
+    \mathop{\arg\min_{\alpha}}  L(w, b, \xi, {\alpha}, \mu) &= \frac{1}{2}(\alpha \odot y)^T \cdot X \cdot X^T \cdot (\alpha \odot y) - \boldsymbol{1}^m \cdot \alpha \label{eq10}\\
     \mathrm{ s.t. }\ \   &y^T \cdot \alpha = 0 \nonumber \\
-    & 0 \leq \alpha_i  \leq C \nonumber 
+    & 0 \leq \alpha_i  \leq C  \iff \boldsymbol{0}^m \leq \alpha \leq \boldsymbol{C}^m \nonumber
 \end{align}
 
 为了使拉格朗日对偶问题的解与原始问题解相同，需要同时满足KTT条件：
@@ -201,11 +212,53 @@ $C - \alpha - u   = \boldsymbol{0} $、$ \alpha_i \geq 0 $ 、$u_i \geq 0 $约�
     \frac{\partial L}{\partial b} &= 0 \nonumber \\
     \frac{\partial L}{\partial \xi} &= 0 \nonumber \\
     {\alpha} \odot  (y \odot (X \cdot w + b) - 1 + \xi) &= \boldsymbol{0}^m \nonumber \\
-    y \odot ((X \cdot w + b) - 1  + \xi) &\geq \boldsymbol{0}^m \nonumber \\
+    y \odot (X \cdot w + b) - 1  + \xi &\geq \boldsymbol{0}^m \nonumber \\
     {\alpha} &\geq \boldsymbol{0}^m  \nonumber \\
     \mu \odot \xi &=  \boldsymbol{0}^m \nonumber \\
     \xi &\geq \boldsymbol{0}^m  \nonumber \\
     \mu &\geq \boldsymbol{0}^m  \nonumber 
+\end{align}
+
+
+
+\subsection{核函数}
+近似线性可分用软间隔方式解决，然而当训练数据是非线性数据，会出现无法在原特征空间找到分离超平面。可以使用
+一个非线性变换，将数据从原特征空间映射到更高维的新空间，然后在新空间中寻找线性分类超平面，这种方法被称为
+核技巧。观察 \eqref{eq10} 式中计算$X \cdot X^t $，即需要计算 $x_i \cdot x_i$内积。将核技巧应用到SVM，
+定义核函数为：
+\begin{align*}
+K(x, z) &=  \phi(x) \cdot \phi(z)
+\end{align*}
+即将原来的向量内积，改成先让向量映射到新空间，然后再求内积。核技巧的另外一个优点是，不需要显示的定义$\phi$
+而是直接计算出 $\phi(x) \cdot \phi(z)$的结果，以高斯核函数为例：
+\begin{align*}
+    K(x, z) &=  \exp ( -\frac{\left\|x-z\right\|^2}{2\sigma^2 }) 
+\end{align*}
+则 \eqref{eq10} 式利用核技巧转化为：
+\begin{align}
+    \mathop{\arg\min_{\alpha}}  L(w, b, \xi, {\alpha}, \mu) &= \frac{1}{2}(\alpha \odot y)^T \cdot K(X, X) \cdot (\alpha \odot y) - \boldsymbol{1}^m \cdot \alpha \label{eq11}\\
+    \mathrm{ s.t. }\ \   &y^T \cdot \alpha = 0 \nonumber \\
+    & \boldsymbol{0}^m \leq \alpha \leq \boldsymbol{C}^m \nonumber \\
+    &{\alpha} \odot  (y \odot (X \cdot w + b) - 1 + \xi) = \boldsymbol{0}^m \nonumber \\
+    &y \odot (X \cdot w + b) - 1  + \xi \geq \boldsymbol{0}^m \nonumber \\
+    &{\alpha} \geq \boldsymbol{0}^m  \nonumber \\
+    &\mu \odot \xi =  \boldsymbol{0}^m \nonumber \\
+    &\xi \geq \boldsymbol{0}^m  \nonumber \\
+    &\mu \geq \boldsymbol{0}^m  \nonumber 
+\end{align}
+
+\subsection{序列最小最优化算法SMO}
+支持向量机的拉格朗日对偶问题是一个凸二次规划问题，具有全局最优解，序列最小最优化算法即SMO算法，是高效求解
+支持向量机解的一种算法。其基本思路是，如果所有变量都满足了KTT条件，那么就求得了问题的解。SMO算法过程如下：
+\begin{itemize}
+    \item 选择两个变量，如$\alpha_1,\alpha_2$，固定其他变量，那么原问题就变成了两个变量的二次优化问题。
+    \item 由于有约束$y^T \cdot \alpha = 0$的存在，选择了两个变量，实际上自由变量只有一个。
+    \item 求解两个变量的最优解，迭代知道所有变量满足KTT条件。
+\end{itemize}
+当选择两个变量，如$\alpha_1,\alpha_2$时，则 \eqref{eq11} 去除不包含 $\alpha_1,\alpha_2$ 的项后化简为:
+\begin{align}
+    \mathop{\arg\min_{\alpha_1, \alpha_2}}  W(\alpha_1, \alpha_2) &=  \label{eq12} \\
+    \mathrm{ s.t. }\ \   &y^T \cdot \alpha = 0 \nonumber 
 \end{align}
 
 End!!
