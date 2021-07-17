@@ -110,8 +110,8 @@ $\frac{y_i \cdot (x_i^T \cdot w_0 + b_0)}{ \left\|w_0\right\|}$为几何间隔�
 可以将 \eqref{eq1} 式化简为：
 \begin{align}
 	\mathop{\arg\max_{w}} \ d &= \frac{1}{ \left\|w\right\|} 			\nonumber\\
-    \iff \mathop{\arg\min_{w}}  \ d &=  \left\|w\right\| \nonumber\\
-    \iff \mathop{\arg\min_{w}}  \ d &=  \frac{1}{2}w^T \cdot w \label{eq2}\\
+    \Leftrightarrow   \mathop{\arg\min_{w}}  \ d &=  \left\|w\right\| \nonumber\\
+    \Leftrightarrow   \mathop{\arg\min_{w}}  \ d &=  \frac{1}{2}w^T \cdot w \label{eq2}\\
     \mathrm{ s.t. }\ \   & y_i \cdot (x_i^T \cdot w + b) \geq 1				\label{eq3}
 \end{align}
 将\eqref{eq2} 和 \eqref{eq3} 利用拉格朗日乘数法，获得拉格朗日原始问题形式：
@@ -193,7 +193,7 @@ $\frac{y_i \cdot (x_i^T \cdot w_0 + b_0)}{ \left\|w_0\right\|}$为几何间隔�
 \end{align}
 代入 \eqref{eq9} 式中： 
 \begin{align}
-    \mathop{\arg\max_{\alpha}}  L(w, b, \xi, {\alpha}, \mu) &= -\frac{1}{2}(\alpha \odot y)^T \cdot X \cdot X^T \cdot (\alpha \odot y) + \boldsymbol{1}^m \cdot \alpha \nonumber \\
+    \mathop{\arg\max_{\alpha}}  L({\alpha}) &= -\frac{1}{2}(\alpha \odot y)^T \cdot X \cdot X^T \cdot (\alpha \odot y) + \boldsymbol{1}^m \cdot \alpha \nonumber \\
     \mathrm{ s.t. }\ \   &y^T \cdot \alpha = 0 \nonumber \\
     &C - \alpha - \mu \nonumber  = \boldsymbol{0} \nonumber \\
     &\alpha_i \geq 0 \nonumber \\
@@ -201,9 +201,9 @@ $\frac{y_i \cdot (x_i^T \cdot w_0 + b_0)}{ \left\|w_0\right\|}$为几何间隔�
 \end{align}
 $C - \alpha - u   = \boldsymbol{0} $、$ \alpha_i \geq 0 $ 、$u_i \geq 0 $约束可以化简为：
 \begin{align}
-    \mathop{\arg\min_{\alpha}}  L(w, b, \xi, {\alpha}, \mu) &= \frac{1}{2}(\alpha \odot y)^T \cdot X \cdot X^T \cdot (\alpha \odot y) - \boldsymbol{1}^m \cdot \alpha \label{eq10}\\
+    \mathop{\arg\min_{\alpha}}  L({\alpha}) &= \frac{1}{2}(\alpha \odot y)^T \cdot X \cdot X^T \cdot (\alpha \odot y) - \boldsymbol{1}^m \cdot \alpha \label{eq10}\\
     \mathrm{ s.t. }\ \   &y^T \cdot \alpha = 0 \nonumber \\
-    & 0 \leq \alpha_i  \leq C  \iff \boldsymbol{0}^m \leq \alpha \leq \boldsymbol{C}^m \nonumber
+    & 0 \leq \alpha_i  \leq C  \Leftrightarrow   \boldsymbol{0}^m \leq \alpha \leq \boldsymbol{C}^m \nonumber
 \end{align}
 
 为了使拉格朗日对偶问题的解与原始问题解相同，需要同时满足KTT条件：
@@ -236,7 +236,7 @@ K(x, z) &=  \phi(x) \cdot \phi(z)
 \end{align*}
 则 \eqref{eq10} 式利用核技巧转化为：
 \begin{align}
-    \mathop{\arg\min_{\alpha}}  L(w, b, \xi, {\alpha}, \mu) &= \frac{1}{2}(\alpha \odot y)^T \cdot K(X, X) \cdot (\alpha \odot y) - \boldsymbol{1}^m \cdot \alpha \label{eq11}\\
+    \mathop{\arg\min_{\alpha}}  L({\alpha}) &= \frac{1}{2}(\alpha \odot y)^T \cdot K(X, X) \cdot (\alpha \odot y) - \boldsymbol{1}^m \cdot \alpha \label{eq11}\\
     \mathrm{ s.t. }\ \   &y^T \cdot \alpha = 0 \nonumber \\
     & \boldsymbol{0}^m \leq \alpha \leq \boldsymbol{C}^m \nonumber \\
     &{\alpha} \odot  (y \odot (X \cdot w + b) - 1 + \xi) = \boldsymbol{0}^m \nonumber \\
@@ -253,12 +253,65 @@ K(x, z) &=  \phi(x) \cdot \phi(z)
 \begin{itemize}
     \item 选择两个变量，如$\alpha_1,\alpha_2$，固定其他变量，那么原问题就变成了两个变量的二次优化问题。
     \item 由于有约束$y^T \cdot \alpha = 0$的存在，选择了两个变量，实际上自由变量只有一个。
-    \item 求解两个变量的最优解，迭代知道所有变量满足KTT条件。
+    \item 求解两个变量的最优解，迭代直到所有变量满足KTT条件。
+    \item 迭代求解使用的解析方法，效率高
 \end{itemize}
-当选择两个变量，如$\alpha_1,\alpha_2$时，则 \eqref{eq11} 去除不包含 $\alpha_1,\alpha_2$ 的项后化简为:
+当选择两个变量，如$\alpha_1,\alpha_2$时，将其他变量看做常数：
 \begin{align}
-    \mathop{\arg\min_{\alpha_1, \alpha_2}}  W(\alpha_1, \alpha_2) &=  \label{eq12} \\
-    \mathrm{ s.t. }\ \   &y^T \cdot \alpha = 0 \nonumber 
+    \mathop{\arg\min_{\alpha}}  L({\alpha}) &= \frac{1}{2}(\alpha \odot y)^T \cdot K(X, X) \cdot (\alpha \odot y) - \boldsymbol{1}^m \cdot \alpha \nonumber \\
+    &=  \frac{1}{2} \sum_{i = 1}^{m}\sum_{j = 1}^{m}  {\alpha}_i {\alpha}_j y_i y_j K(x_i, x_j) - \sum_{i = 1}^{m}{\alpha}_i \nonumber
+\end{align}
+则上式子去除不包含 $\alpha_1,\alpha_2$ 的项后化简为:
+\begin{align}
+    \mathop{\arg\min_{\alpha_1, \alpha_2}}  W(\alpha_1, \alpha_2) &=  \frac{1}{2}K_{11}a_1^2 + y_1y_2K_{12}a_1a_2  + \frac{1}{2}K_{22}a_2^2 \nonumber \\
+        & \ \ \ + y_1a_1\sum_{i = 3}^{m}y_ia_iK_{i1}  \nonumber \\
+        & \ \ \ + y_2a_2\sum_{i = 3}^{m} y_ia_iK_{i2} \nonumber \\
+        & \ \ \ - (a_1 + a_2) \nonumber \\
+        &=  \frac{1}{2}K_{11}a_1^2 + y_1y_2K_{12}a_1a_2  + \frac{1}{2}K_{22}a_2^2 \nonumber \\
+        & \ \ \ + y_1a_1(\sum_{i = 1}^{m}y_ia_i^{old}K_{i1}  - y_1a_1^{old}K_{11} - y_2a_2^{old}K_{12} ) \nonumber \\
+        & \ \ \ + y_2a_2(\sum_{i = 1}^{m} y_ia_i^{old}K_{i2} - y_1a_1^{old}K_{12} - y_2a_2^{old}K_{22} ) \nonumber \\
+        & \ \ \ - (a_1 + a_2) \nonumber \\
+        &=  \frac{1}{2}K_{11}a_1^2 + y_1y_2K_{12}a_1a_2  + \frac{1}{2}K_{22}a_2^2 \nonumber \\
+        & \ \ \ + y_1a_1((y \odot a^{old})^T \cdot K(X, x_1) - y_1a_1^{old}K_{11} - y_2a_2^{old}K_{12} ) \nonumber \\
+        & \ \ \ + y_2a_2((y \odot a^{old})^T \cdot K(X, x_2) - y_1a_1^{old}K_{12} - y_2a_2^{old}K_{22} ) \nonumber \\
+        & \ \ \ - (a_1 + a_2) \nonumber 
+\end{align}
+
+利用约束$ \mathrm{ s.t. } \ \ y^T \cdot \alpha = 0 $ 得到: 
+\begin{align}      
+     a_1y_1 + a_2y_2 &= a_1^{old}y_1 + a_2^{old}y_2 = \zeta \nonumber\\
+     a_1 &= y_1( \zeta - a_2y_2) =  a_1^{old} + a_2^{old}y_1y_2 - a_2y_1y_2 \nonumber
+\end{align}
+将$a_1$代入：
+\begin{align}      
+    \mathop{\arg\min_{\alpha_2}}  W(\alpha_2) &=  \frac{1}{2}K_{11}(y_1( \zeta - a_2y_2))^2 + y_1y_2K_{12}y_1( \zeta - a_2y_2)a_2  + \frac{1}{2}K_{22}a_2^2 \nonumber \\
+        & \ \ \ + y_1y_1( \zeta - a_2y_2)((y \odot a^{old})^T \cdot K(X, x_1) - y_1a_1^{old}K_{11} - y_2a_2^{old}K_{12} ) \nonumber \\
+        & \ \ \ + y_2a_2((y \odot a^{old})^T \cdot K(X, x_2) - y_1a_1^{old}K_{12} - y_2a_2^{old}K_{22} ) \nonumber \\
+        & \ \ \ - (y_1( \zeta - a_2y_2) + a_2) \nonumber 
+\end{align}
+针对$a_2$求导，并令导数为0:
+\begin{align}
+    \frac{\partial W}{\partial a_2} &= K_{11}y_2( a_2y_2 - \zeta) + K_{12}(y_2\zeta - 2a_2) + K_{22}a_2 \nonumber \\
+    & \ \ \ - y_2((y \odot a^{old})^T \cdot K(X, x_1) - y_1a_1^{old}K_{11} - y_2a_2^{old}K_{12} ) \nonumber \\
+    & \ \ \ + y_2((y \odot a^{old})^T \cdot K(X, x_2) - y_1a_1^{old}K_{12} - y_2a_2^{old}K_{22} ) \nonumber \\
+    & \ \ \ + y_1y_2 - 1 \nonumber \\
+    &= a_2(K_{11} - 2K_{12} + K_{22}) \nonumber \\
+    & \ \ \ + y_2((y \odot a^{old})^T \cdot K(X, x_2) - (y \odot a^{old})^T \cdot K(X, x_1) ) \nonumber \\
+    & \ \ \ + y_1a_1^{old}K_{11} + y_2a_2^{old}K_{12} - y_1a_1^{old}K_{12} - y_2a_2^{old}K_{22} \nonumber \\
+    & \ \ \ + y_1y_2 - 1 - K_{11}y_2(y_1a_1^{old} + y_2a_2^{old}) + K_{12}y_2(y_1a_1^{old} + y_2a_2^{old}) \nonumber \\
+    &= a_2(K_{11} - 2K_{12} + K_{22}) \nonumber \\
+    & \ \ \ + y_2((y \odot a^{old})^T \cdot K(X, x_2) - (y \odot a^{old})^T \cdot K(X, x_1) ) \nonumber \\
+    & \ \ \ - a_2^{old}(K_{11} - 2K_{12} + K_{22}) \nonumber \\
+    & \ \ \ + y_1y_2 - 1 + y_1a_1^{old}K_{11}  - y_1a_1^{old}K_{12} - y_1y_2a_1^{old}K_{11}- y_1y_2a_1^{old}K_{12} \nonumber \\
+    &= a_2(K_{11} - 2K_{12} + K_{22})  \nonumber \\
+    & \ \ \ + y_2((y \odot a^{old})^T \cdot K(X, x_2) - (y \odot a^{old})^T \cdot K(X, x_1) ) \nonumber \\
+    & \ \ \ - a_2^{old}(K_{11} - 2K_{12} + K_{22}) \nonumber \\
+    & \ \ \ + y_1y_2(1 - a_1^{old}K_{11} - a_1^{old}K_{12}) - (1 - y_1a_1^{old}K_{11})\nonumber \\
+    &= 0 \nonumber
+\end{align}
+则可以推得：
+\begin{align}      
+    a_2^{new,unclip} &= a_2^{old} + \frac{y2((\alpha \odot y)^T \cdot K(X, x_1) - (\alpha \odot y)^T \cdot K(X, x_2))}{(K_{11} + K_{22} - 2K_{12})} \label{eq12} 
 \end{align}
 
 End!!
