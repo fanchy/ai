@@ -78,7 +78,7 @@ morekeywords={*,...}               % if you want to add more keywords to the set
 \newpage
 \section{数学推导与python实现}
 
-\subsection{分类超平面}
+\subsection{SVM简介}
 当训练数据线性可分，可以得到一个线性超平面 $ x \cdot w + b = 0 $,将在超平面上方的归为正类，将在超平面下方的归为负类。当数据点
 与超平面距离越远时，表示分类的确定性越高，这样虽然线性分类的超平面可能有无数多个，但是我们可以找到一个所有点距离超平面最大的一个
 超平面。相应的决策函数为:
@@ -93,7 +93,7 @@ morekeywords={*,...}               % if you want to add more keywords to the set
 
 
 
-\subsection{公式推导}
+\subsection{最大间隔分类超平面}
 $x_i^T \cdot w_0 + b_0$ 为正时，$y_i$为正，当$x_i^T \cdot w_0 + b_0$ 为负时，$y_i$为负，则可以定义
 $\frac{y_i \cdot (x_i^T \cdot w_0 + b_0)}{ \left\|w_0\right\|}$为几何间隔，表示数据点距离超平面的距离。
 模型最终会找到一个参数为$w_0$和$b_0$的分离超平面，所有点距离超平面的距离都大于等于d，将距离正好等于d的数据
@@ -124,6 +124,9 @@ $\frac{y_i \cdot (x_i^T \cdot w_0 + b_0)}{ \left\|w_0\right\|}$为几何间隔�
 \begin{align}
     \mathop{\arg\max_{\alpha}\min_{w,b}} \ 	L(w, b, {\alpha}) &= \frac{1}{2}	w^T \cdot w  - (\alpha \odot y) ^T \cdot  (X \cdot w + b) + \boldsymbol{1}^T\cdot\alpha \label{eq5}
 \end{align}
+
+
+\subsection{求解拉格朗日对偶问题}
 首先求L以 w、b为参数的极小值，通过求微分得到偏导数形式。
 \begin{align}
     \mathrm{d}L &= \frac{1}{2}tr[(\mathrm{d}w)^T \cdot w + w^T \cdot \mathrm{d}w) - (\alpha \odot y) ^T \cdot(X\mathrm{d}w) \nonumber \\
@@ -319,10 +322,42 @@ K(x, z) &=  \phi(x) \cdot \phi(z)
     E_i &= g(x_i) - y_i  = (a \odot y)^T \cdot K(X, x_i) + b \\
     \eta &= K_{11} - 2K_{12} + K_{22}
 \end{align*}
-则 \eqref{eq12} 式可以转换为:
+则 \eqref{eq12} 式得到未经剪辑的$a_2$解为:
 \begin{align}      
     a_2^{new,unclip} &= a_2^{old} + \frac{y2(E_1 - E_2)}{\eta} \label{eq13} 
 \end{align}
+因为有约束$a_1y_1 + a_2y_2 = \zeta = a_1^{old}y_1 + a_2^{old}y_2$ 并且 $0 \leq a_i \leq C$，
+下面讨论$a_2$的上限下限$L \leq a_2 \leq H$,当$y_1 \neq y_2$时：
+\begin{align*}
+    a_2 - a_1 &= a_2^{old} - a_1^{old} \\
+    L &= max(0, a_2^{old} - a_1^{old}) \\
+    H &= min(C, C + a_2^{old} - a_1^{old})
+\end{align*}
+当$y_1 = y_2$时：
+\begin{align*}
+    a_2 + a_1 &= a_2^{old} + a_1^{old} \\
+    L &= max(0, a_2^{old} + a_1^{old} - C) \\
+    H &= min(C, a_2^{old} + a_1^{old})
+\end{align*}
+则$a_2$经剪辑后解为：
+\begin{align*}
+    a_2^{new} &= 
+\left\{
+    \begin{array}{lr}
+    H, & a_2^{new,unclip} > H  \\
+    a_2^{new,unclip}, & L \leq a_2^{new,unclip} \leq H\\
+    L, & a_2^{new,unclip} < L  
+    \end{array}
+\right.
+\end{align*}
+对于偏置$b$,由于KTT条件约束有:
+\begin{align*}
+    {\alpha} \odot  (y \odot (X \cdot w + b) - 1) &= \boldsymbol{0}^m 
+\end{align*}
+对于任一$a_i > 0$有  $(a^{old} \odot y))^T \cdot K(X, x_i) + b = y_i $ 整理后得到：
+\begin{align*}
+    b_2^{new} &= y_2 - $(a^{old} \odot y))^T \cdot K(X, x_i)
+\end{align*}
 End!!
 
 
