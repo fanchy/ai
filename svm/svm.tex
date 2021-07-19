@@ -296,24 +296,33 @@ K(x, z) &=  \phi(x) \cdot \phi(z)
     & \ \ \ + y_2((y \odot a^{old})^T \cdot K(X, x_2) - y_1a_1^{old}K_{12} - y_2a_2^{old}K_{22} ) \nonumber \\
     & \ \ \ + y_1y_2 - 1 \nonumber \\
     &= a_2(K_{11} - 2K_{12} + K_{22}) \nonumber \\
+    & \ \ \ - K_{11}y_2(y_1a_1^{old} + y_2a_2^{old}) + K_{12}y_2(y_1a_1^{old} + y_2a_2^{old}) \nonumber \\
     & \ \ \ + y_2((y \odot a^{old})^T \cdot K(X, x_2) - (y \odot a^{old})^T \cdot K(X, x_1) ) \nonumber \\
-    & \ \ \ + y_1a_1^{old}K_{11} + y_2a_2^{old}K_{12} - y_1a_1^{old}K_{12} - y_2a_2^{old}K_{22} \nonumber \\
-    & \ \ \ + y_1y_2 - 1 - K_{11}y_2(y_1a_1^{old} + y_2a_2^{old}) + K_{12}y_2(y_1a_1^{old} + y_2a_2^{old}) \nonumber \\
+    & \ \ \ + y_1y_2a_1^{old}K_{11} + a_2^{old}K_{12} - y_1y_2a_1^{old}K_{12} - a_2^{old}K_{22} \nonumber \\
+    & \ \ \ + y_1y_2 - 1 \nonumber \\
     &= a_2(K_{11} - 2K_{12} + K_{22}) \nonumber \\
     & \ \ \ + y_2((y \odot a^{old})^T \cdot K(X, x_2) - (y \odot a^{old})^T \cdot K(X, x_1) ) \nonumber \\
     & \ \ \ - a_2^{old}(K_{11} - 2K_{12} + K_{22}) \nonumber \\
-    & \ \ \ + y_1y_2 - 1 + y_1a_1^{old}K_{11}  - y_1a_1^{old}K_{12} - y_1y_2a_1^{old}K_{11}- y_1y_2a_1^{old}K_{12} \nonumber \\
-    &= a_2(K_{11} - 2K_{12} + K_{22})  \nonumber \\
-    & \ \ \ + y_2((y \odot a^{old})^T \cdot K(X, x_2) - (y \odot a^{old})^T \cdot K(X, x_1) ) \nonumber \\
+    & \ \ \ + y_1y_2 - 1 \nonumber \\
+    &= a_2(K_{11} - 2K_{12} + K_{22}) \nonumber \\
+    & \ \ \ + y_2((y \odot a^{old})^T \cdot K(X, x_2) - y2 - ((y \odot a^{old})^T \cdot K(X, x_1) - y_1)) \nonumber \\
     & \ \ \ - a_2^{old}(K_{11} - 2K_{12} + K_{22}) \nonumber \\
-    & \ \ \ + y_1y_2(1 - a_1^{old}K_{11} - a_1^{old}K_{12}) - (1 - y_1a_1^{old}K_{11})\nonumber \\
     &= 0 \nonumber
 \end{align}
 则可以推得：
 \begin{align}      
-    a_2^{new,unclip} &= a_2^{old} + \frac{y2((\alpha \odot y)^T \cdot K(X, x_1) - (\alpha \odot y)^T \cdot K(X, x_2))}{(K_{11} + K_{22} - 2K_{12})} \label{eq12} 
+    a_2^{new,unclip} &= a_2^{old} + \frac{y2(((\alpha \odot y)^T \cdot K(X, x_1) - y_1) - ((\alpha \odot y)^T \cdot K(X, x_2)-y_2))}{(K_{11} + K_{22} - 2K_{12})} \label{eq12} 
 \end{align}
-
+考虑到$ w = X^T \cdot (a \odot y) $ 令 $ g(x) = w^T \cdot x + b = (a \odot y)^T \cdot X \cdot x + b$，将
+将内积转换成核函数形式，并且定义函数$E_i$为函数$g(x)$与$y_i$的误差值:
+\begin{align*}
+    E_i &= g(x_i) - y_i  = (a \odot y)^T \cdot K(X, x_i) + b \\
+    \eta &= K_{11} - 2K_{12} + K_{22}
+\end{align*}
+则 \eqref{eq12} 式可以转换为:
+\begin{align}      
+    a_2^{new,unclip} &= a_2^{old} + \frac{y2(E_1 - E_2)}{\eta} \label{eq13} 
+\end{align}
 End!!
 
 
