@@ -354,9 +354,20 @@ K(x, z) &=  \phi(x) \cdot \phi(z)
 \begin{align*}
     {\alpha} \odot  (y \odot (X \cdot w + b) - 1) &= \boldsymbol{0}^m 
 \end{align*}
-对于任一$a_i > 0$有  $(a^{old} \odot y))^T \cdot K(X, x_i) + b = y_i $ 整理后得到：
+对于任一$a_i > 0$有  $(a^{old} \odot y))^T \cdot K(X, x_i) + b = y_i $ 整理后得到,当$0 \leq a_1 \leq C$时：
 \begin{align*}
-    b_2^{new} &= y_2 - $(a^{old} \odot y))^T \cdot K(X, x_i)
+    b_1^{new} &= y_1 - (a^{new} \odot y))^T \cdot K(X, x_1) \\
+    &= y_1 - (a^{old} \odot y))^T \cdot K(X, x_1) + a_1^{old}y_1K_{11} + a_2^{old}y_2K_{12} - a_1^{new}y_1K_{11} - a_2^{new}y_2K_{12} 
+\end{align*}
+当$0 \leq a_2 \leq C$时：
+\begin{align*}
+    b_2^{new} &= y_2 - (a^{new} \odot y))^T \cdot K(X, x_2) \\
+    &= y_2 - (a^{old} \odot y))^T \cdot K(X, x_2) + a_1^{old}y_1K_{12} + a_2^{old}y_2K_{22} - a_1^{new}y_1K_{12} - a_2^{new}y_2K_{22}
+\end{align*}
+若$a_1$ 、$a_2$都满足条件，那么$a_1 = a_2$。\\
+分类函数为:
+\begin{align*}
+    f(x) = sign((a \odot y)^T \cdot K(X,x) + b)
 \end{align*}
 End!!
 
