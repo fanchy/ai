@@ -308,23 +308,23 @@ K(x, z) &=  \phi(x) \cdot \phi(z)
     & \ \ \ - a_2^{old}(K_{11} - 2K_{12} + K_{22}) \nonumber \\
     & \ \ \ + y_1y_2 - 1 \nonumber \\
     &= a_2(K_{11} - 2K_{12} + K_{22}) \nonumber \\
-    & \ \ \ + y_2((y \odot a^{old})^T \cdot K(X, x_2) - y2 - ((y \odot a^{old})^T \cdot K(X, x_1) - y_1)) \nonumber \\
+    & \ \ \ + y_2((y \odot a^{old})^T \cdot K(X, x_2) - y_2 - ((y \odot a^{old})^T \cdot K(X, x_1) - y_1)) \nonumber \\
     & \ \ \ - a_2^{old}(K_{11} - 2K_{12} + K_{22}) \nonumber \\
     &= 0 \nonumber
 \end{align}
 则可以推得：
 \begin{align}      
-    a_2^{new,unclip} &= a_2^{old} + \frac{y2(((\alpha \odot y)^T \cdot K(X, x_1) - y_1) - ((\alpha \odot y)^T \cdot K(X, x_2)-y_2))}{(K_{11} + K_{22} - 2K_{12})} \label{eq12} 
+    a_2^{new,unclip} &= a_2^{old} + \frac{y_2(((\alpha \odot y)^T \cdot K(X, x_1) - y_1) - ((\alpha \odot y)^T \cdot K(X, x_2)-y_2))}{(K_{11} - 2K_{12} + K_{22})} \label{eq12} 
 \end{align}
 考虑到$ w = X^T \cdot (a \odot y) $ 令 $ g(x) = w^T \cdot x + b = (a \odot y)^T \cdot X \cdot x + b$，将
 将内积转换成核函数形式，并且定义函数$E_i$为函数$g(x)$与$y_i$的误差值:
 \begin{align*}
-    E_i &= g(x_i) - y_i  = (a \odot y)^T \cdot K(X, x_i) + b \\
+    E_i &= g(x_i) - y_i  = (a \odot y)^T \cdot K(X, x_i) + b - y_i\\
     \eta &= K_{11} - 2K_{12} + K_{22}
 \end{align*}
 则 \eqref{eq12} 式得到未经剪辑的$a_2$解为:
 \begin{align}      
-    a_2^{new,unclip} &= a_2^{old} + \frac{y2(E_1 - E_2)}{\eta} \label{eq13} 
+    a_2^{new,unclip} &= a_2^{old} + \frac{y_2(E_1 - E_2)}{\eta} \label{eq13} 
 \end{align}
 因为有约束$a_1y_1 + a_2y_2 = \zeta = a_1^{old}y_1 + a_2^{old}y_2$ 并且 $0 \leq a_i \leq C$，
 下面讨论$a_2$的上限下限$L \leq a_2 \leq H$,当$y_1 \neq y_2$时：
@@ -364,11 +364,9 @@ K(x, z) &=  \phi(x) \cdot \phi(z)
     b_2^{new} &= y_2 - (a^{new} \odot y))^T \cdot K(X, x_2) \\
     &= y_2 - (a^{old} \odot y))^T \cdot K(X, x_2) + a_1^{old}y_1K_{12} + a_2^{old}y_2K_{22} - a_1^{new}y_1K_{12} - a_2^{new}y_2K_{22}
 \end{align*}
-若$a_1$ 、$a_2$都满足条件，那么$a_1 = a_2$。\\
-分类函数为:
-\begin{align*}
-    f(x) = sign((a \odot y)^T \cdot K(X,x) + b)
-\end{align*}
+若$a_1$ 、$a_2$都满足条件，那么$b_1^{new} = a_2^{new}$。\\
+当所有$a_i$满足KTT条件时，模型得解。
+
 End!!
 
 
