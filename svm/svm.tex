@@ -319,6 +319,7 @@ K(x, z) &=  \phi(x) \cdot \phi(z)
 考虑到$ w = X^T \cdot (a \odot y) $ 令 $ g(x) = w^T \cdot x + b = (a \odot y)^T \cdot X \cdot x + b$，将
 将内积转换成核函数形式，并且定义函数$E_i$为函数$g(x)$与$y_i$的误差值:
 \begin{align*}
+    g(x_i) &=  (a \odot y)^T \cdot K(X, x_i) + b \\
     E_i &= g(x_i) - y_i  = (a \odot y)^T \cdot K(X, x_i) + b - y_i\\
     \eta &= K_{11} - 2K_{12} + K_{22}
 \end{align*}
@@ -367,10 +368,249 @@ K(x, z) &=  \phi(x) \cdot \phi(z)
 若$a_1$ 、$a_2$都满足条件，那么$b_1^{new} = a_2^{new}$。\\
 当所有$a_i$满足KTT条件时，模型得解。
 
-End!!
+\section{总结}
+\subsection{线性可分支持向量机}
+当训练数据线性可分时，支持向量机可以得到一个最大间隔的分离超平面，若近似可分，则可以添加软间隔的方式，若线性
+不可分，则可以利用核技巧确保可以找到最大间隔分离超平面。由于得到的分离间隔最大，支持向量机有较好的鲁棒性。
+\subsection{模型训练}
+通过拉格朗日对偶变换，通过KTT条件，可以将原始问题转换为拉格朗日对偶问题，从而自然的引入核函数。SMO是常用的模型训练算法，
+其本质上是凸二次规划问题，当所有变量都满足KTT条件，可以得到最佳解。SMO的计算过程直接利用解析解，求解速度较快。
 
 
+\newpage
+\begin{thebibliography}{99}
+    \bibitem{b}Ian Goodfellow / Yoshua Bengio / Aaron Courville . \emph{Deep Learning}[M]. 北京:清华大学出版社,2017-08-01.
+    \bibitem{b}张贤达. \emph{矩阵分析与应用}[M]. 北京:人民邮电出版社,2013-11-01.
+    \bibitem{c}李航. \emph{统计学习方法}[M]. 北京:清华大学出版社,2012-03.
+    \bibitem{d}David C. Lay / Steven R. Lay / Judi J. McDonald . \emph{线性代数及其应用}[M]. 北京:机械工业出版社,2018-07.
+    \bibitem{e}史蒂文·J. 米勒 . \emph{普林斯顿概率论读本}[M]. 北京:人民邮电出版社,2020-08.
+\end{thebibliography}
 
+
+\newpage
+\begin{appendices}
+\section{支持向量机的python源码}
+支持向量机的python源码实现，只使用numpy库：
+
+\begin{lstlisting}
+# -*- coding: utf8 -*-
+import math
+import time
+import numpy as np 
+import sklearn
+from sklearn import datasets
+from sklearn.datasets import load_breast_cancer
+from sklearn import preprocessing
+import matplotlib.pyplot as plt
+from sklearn.metrics import r2_score
+dataset = sklearn.datasets.load_breast_cancer()
+dataset.target[dataset.target == 0] = -1 #0/1 标记替换成1/-1标记
+
+class GSKernal:
+    def __init__(self):
+        self.sigma = 10
+    def cal(self, x, z):
+        result = None
+        if len(x.shape) == 2:
+            result = np.linalg.norm(x-z, axis=1) ** 2
+        else:
+            result = np.linalg.norm(x-z) ** 2
+        return np.exp(-1 * result / (2 * self.sigma**2))
+
+class SVM:
+    def __init__(self, kn = None, C = 1, toler = 0.001):
+        self.w = None #w
+        self.b = None #b
+        if not kn:
+            kn = GSKernal()
+        self.kn= kn
+        self.C = C
+        self.toler = toler
+        self.alpha = None
+        self.X = None
+        self.Y = None
+        self.kCache = {}
+        return
+    def calK(self, i, j):
+        key = ''
+        if i <= j:
+            key = '%d_%d'%(i, j)
+        else:
+            key = '%d_%d'%(j, i)
+        ret = self.kCache.get(key)
+        if ret:
+            return ret
+        x1 = self.X[i]
+        x2 = self.X[j]
+        ret = self.kn.cal(x1, x2)
+        self.kCache[key] = ret
+        return ret
+    def calK2(self, j):
+        key = 'All_%d'%(j)
+        ret = self.kCache.get(key)
+        if ret:
+            return ret['data']
+        ret = np.zeros(self.X.shape[0])
+        x2 = self.X[j]
+        for i in range(self.X.shape[0]):
+            x1 = self.X[i]
+            ret[i] = self.kn.cal(x1, x2)
+        self.kCache[key] = {'data':ret}
+        return ret
+        
+    def isZero(self, v):
+        return math.fabs(v) < self.toler
+    def calGxi(self, i):
+        xi = self.X[i]
+        ay = np.multiply(self.alpha, self.Y)
+        gxi = np.dot(ay, self.calK2(i)) + self.b
+        return gxi
+    def calcEi(self, i):
+        gxi = self.calGxi(i)
+        return gxi - self.Y[i]
+    def isSatisfyKKT(self, i):
+        gxi = self.calGxi(i)
+        yi = self.Y[i]
+        if self.isZero(self.alpha[i]) and (yi * gxi >= 1):
+            return True
+        elif self.isZero(self.alpha[i] - self.C) and (yi * gxi <= 1):
+            return True
+        elif (self.alpha[i] > -self.toler) and (self.alpha[i] < (self.C + self.toler)) \
+                and self.isZero(yi * gxi - 1):
+            return True
+
+        return False
+    def getAlphaJ(self, E1, i):
+        E2 = 0
+        maxE1_E2 = -1
+        maxIndex = -1
+
+        for j in range(self.X.shape[0]):
+            if j == i:
+                continue
+            E2_tmp = self.calcEi(j)
+            if E2_tmp == 0:
+                continue
+            if math.fabs(E1 - E2_tmp) > maxE1_E2:
+                maxE1_E2 = math.fabs(E1 - E2_tmp)
+                E2 = E2_tmp
+                maxIndex = j
+        if maxIndex == -1:
+            maxIndex = i
+            while maxIndex == i:
+                maxIndex = int(random.uniform(0, self.X.shape[0]))
+            E2 = self.calcEi(maxIndex)
+
+        return E2, maxIndex
+
+    def fit(self, X, Y, iterMax = 10):
+        self.kCache.clear()
+        scalerX = sklearn.preprocessing.StandardScaler().fit(X)#StandardScaler
+        #Y = Y.reshape(-1, 1)
+        X = scalerX.transform(X)
+        
+        w = np.zeros(X.shape[1])
+        self.b = 0
+        a = np.zeros(X.shape[0])
+        self.alpha = a
+        self.X = X
+        self.Y = Y
+
+        iterStep = 0; parameterChanged = 1
+
+        calTims = 0
+        while (iterStep < iterMax) and (parameterChanged > 0):
+            iterStep += 1
+            parameterChanged = 0
+
+            for i in range(self.X.shape[0]):
+                if self.isSatisfyKKT(i):
+                    continue
+                E1 = self.calcEi(i)
+                E2, j = self.getAlphaJ(E1, i)
+                                
+                y1 = self.Y[i]
+                y2 = self.Y[j]
+                x1 = self.X[i]
+                x2 = self.X[j]
+                a1_old = a[i]
+                a2_old = a[j]
+                
+                if y1 != y2:
+                    L = max(0, a2_old - a1_old)
+                    H = min(self.C, self.C + a2_old - a1_old)
+                else:
+                    L = max(0, a2_old + a1_old - self.C)
+                    H = min(self.C, a2_old + a1_old)
+                if L == H:
+                    continue
+                
+                k11 = self.calK(i, i)
+                k12 = self.calK(i, j)
+                k21 = k12
+                k22 = self.calK(j, j)
+                      
+                ay = np.multiply(a, self.Y)
+                ayk1 = np.dot(ay, self.calK2(i))
+                ayk2 = np.dot(ay, self.calK2(j))
+                a2_new = a2_old + (y2 * (ayk1 - y1 - (ayk2 - y2))) / (k11 - 2*k12 + k22)
+                a1_new = a1_old + y1 * y2 * (a2_old - a2_new)
+                
+                b1New = -1 * E1 - y1 * k11 * (a1_new - a1_old) \
+                            - y2 * k21 * (a2_new - a2_old) + self.b
+                b2New = -1 * E2 - y1 * k12 * (a1_new - a1_old) \
+                        - y2 * k22 * (a2_new - a2_old) + self.b
+                bNew = 0
+                if (a1_new > 0) and (a1_new < self.C):
+                    bNew = b1New
+                elif (a2_new > 0) and (a2_new < self.C):
+                    bNew = b2New
+                else:
+                    bNew = (b1New + b2New) / 2
+
+                self.alpha[i] = a1_new
+                self.alpha[j] = a2_new
+                self.b = bNew
+                if math.fabs(a2_new - a2_old) >= 0.00001:
+                    parameterChanged += 1
+                calTims += 1
+                
+                if calTims % 50 == 0:
+                    print('train iter:%d SMO times:%d'%(iterStep, calTims))
+                #time.sleep(1)
+                #return
+        Yo = self.predict(self.X)
+        #print(Yo)
+        score = r2_score(Yo, self.Y)
+        print('score', score)
+        return
+    def predict(self, X):
+        if len(X.shape) == 1:
+            return self.predictOne(X)
+        ret = np.zeros(X.shape[0])
+        for i in range(X.shape[0]):
+            ret[i] = self.predictOne(X[i])
+        return ret
+    def predictOne(self, x):
+        ret = np.zeros(self.X.shape[0])
+        x2 = x
+        for i in range(self.X.shape[0]):
+            x1 = self.X[i]
+            ret[i] = self.kn.cal(x1, x2)
+        ay = np.multiply(self.alpha, self.Y)
+        gxi = np.dot(ay, ret) + self.b
+        if gxi > 0:
+            return 1
+        return -1
+
+if __name__ == '__main__':
+    svm = SVM()
+    print('data', dataset.data.shape)
+    svm.fit(dataset.data, dataset.target)
+
+\end{lstlisting}
+
+\end{appendices}
 
 \end{document}                 % The input file ends with this command.
 
